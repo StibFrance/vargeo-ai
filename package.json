@@ -1,0 +1,31 @@
+{
+  "name": "vargeo-ai",
+  "version": "1.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test:calculations": "node scripts/test-calculations.mjs",
+    "verify": "npm run typecheck && npm run test:calculations && npm run test:docx && npm run build",
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:seed": "node scripts/seed-admin.mjs",
+    "test:docx": "node scripts/test-docx.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "1.1.0",
+    "next": "16.3.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "typescript": "5.8.3"
+  },
+  "engines": {
+    "node": "24.x"
+  }
+}
