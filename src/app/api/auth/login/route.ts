@@ -42,9 +42,8 @@ export async function POST(req: Request) {
       [normalizedEmail]
     );
     const user = rows[0] as { id: string; password_hash: string; is_active: boolean; role: "admin" | "engineer" | "technician" | "client" } | undefined;
-    const passwordOk = Boolean(user?.is_active && verifyPassword(String(password), user.password_hash));
 
-    if (!passwordOk) {
+    if (!user || !user.is_active || !verifyPassword(String(password), user.password_hash)) {
       await sql.query("INSERT INTO login_attempts(email_hash,succeeded) VALUES($1,false)", [loginKey]);
       return NextResponse.json({ error: "Identifiants invalides" }, { status: 401 });
     }
