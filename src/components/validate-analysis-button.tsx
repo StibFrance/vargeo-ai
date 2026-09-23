@@ -1,0 +1,2 @@
+"use client";import { useState } from "react";import { useRouter } from "next/navigation";
+export default function ValidateAnalysisButton({id}:{id:string}){const router=useRouter();const[busy,setBusy]=useState(false);async function run(){setBusy(true);const res=await fetch(`/api/analyses/${id}/validate`,{method:"POST"});setBusy(false);if(res.ok)router.refresh();else alert("Validation impossible");}return <button className="button secondary" onClick={run} disabled={busy}>{busy?"Validation…":"Valider le calcul"}</button>}
