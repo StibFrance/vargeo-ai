@@ -29,7 +29,7 @@ export default function Home(){
       </div>
     </section>
 
-    <section className="public-section" id="formules">
+    <section className="public-section" id="exemples"><div className="eyebrow">Démonstrations techniques</div><h2>Exemples VarGéo.AI</h2></section>\n\n    <section className="public-section" id="formules">
       <div className="eyebrow">Abonnements professionnels</div>
       <h2>Choisissez le niveau adapté à votre production</h2>
       <div className="grid grid-3">{plans.map(p=><div className="card pricing-card" key={p.name}><div><div className="module-code">{p.name}</div><div className="pricing-price">{p.price}</div><strong>{p.volume}</strong><p className="muted">{p.text}</p></div><a className="button" href="#devis">Demander un devis</a></div>)}</div>
