@@ -5,7 +5,7 @@ let cached: ReturnType<typeof neon> | null = null;
 type DbRow = Record<string, any>;
 
 type AppDb = {
-  query<T extends DbRow = DbRow>(text: string, params?: unknown[]): Promise<T[]>;
+  query<T extends DbRow = DbRow>(text: string, params?: any[]): Promise<T[]>;
 };
 
 let wrapped: AppDb | null = null;
@@ -19,7 +19,7 @@ export function db(): AppDb {
 
   if (!wrapped) {
     wrapped = {
-      async query<T extends DbRow = DbRow>(text: string, params: unknown[] = []) {
+      async query<T extends DbRow = DbRow>(text: string, params: any[] = []) {
         const result = await cached!.query(text, params);
         return result as unknown as T[];
       },
