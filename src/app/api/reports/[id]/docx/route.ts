@@ -1,18 +1,19 @@
-import { requireUser } from "@/lib/auth";
+import { requireUser,projectScope } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { buildReportDocx } from "@/lib/docx";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
   const { id } = await params;
+  const scope=projectScope(user,"p",2);
   const rows = await db().query(
     `SELECT r.title,r.current_version,rv.content,p.code
      FROM reports r
      JOIN projects p ON p.id=r.project_id
      JOIN report_versions rv ON rv.report_id=r.id AND rv.version=r.current_version
-     WHERE r.id=$1 AND p.organization_id=$2
+     WHERE r.id=$1 AND ${scope.clause}
      LIMIT 1`,
-    [id, user.organization_id]
+    [id, ...scope.params]
   );
   const report = rows[0] as { title: string; current_version: number; content: unknown; code: string } | undefined;
   if (!report) return Response.json({ error: "Rapport introuvable" }, { status: 404 });
