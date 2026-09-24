@@ -39,6 +39,17 @@ export default function Home(){
           <h3>Bâtiment fissuré sur sols sensibles aux variations hydriques</h3>
           <p className="muted">Analyse croisée de la fissuration, du contexte hydrique, des fondations et de la chronologie.</p>
           <div className="toolbar"><span className="badge">M1 STRAT</span><span className="badge">M3 FONDA</span><span className="badge">M5 SENSOR</span><span className="badge">M8 HYDRO</span></div>
+          <details className="example-details"><summary>Voir le workflow</summary>
+            <ol>
+              <li>Contrôle des pièces et séparation faits / hypothèses.</li>
+              <li>Construction du modèle géotechnique et lecture de la zone active.</li>
+              <li>Analyse de la cinématique des fissures dans le temps.</li>
+              <li>Corrélation avec l'humidité des sols et les épisodes hydriques.</li>
+              <li>Comparaison des scénarios de maîtrise des eaux et de reprise.</li>
+              <li>Orientation vers une solution à dimensionner en G2 PRO.</li>
+            </ol>
+            <p><strong>Décision :</strong> diagnostic causal argumenté, programme d'instrumentation et passage encadré vers G2 PRO puis G3/G4.</p>
+          </details>
         </article>
         <article className="card">
           <div className="module-code">EXEMPLE 02 · G2 PRO</div>
