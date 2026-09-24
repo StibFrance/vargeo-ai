@@ -31,14 +31,14 @@ export default function AdminUsersPanel({ users }: { users: UserRow[] }) {
 
   return <div className="split" style={{ marginTop: 18 }}>
     <form className="card form" onSubmit={submit}>
-      <h3>Ajouter un utilisateur interne</h3>
+      <h3>Ajouter un utilisateur</h3>
       <div className="field"><label>Nom</label><input name="name" required /></div>
       <div className="field"><label>E-mail</label><input name="email" type="email" required /></div>
-      <div className="field"><label>Role</label><select name="role" defaultValue="engineer"><option value="engineer">Ingenieur</option><option value="technician">Technicien</option><option value="admin">Administrateur</option></select></div>
+      <div className="field"><label>Role</label><select name="role" defaultValue="engineer"><option value="engineer">Ingenieur</option><option value="technician">Technicien</option><option value="admin">Administrateur</option><option value="client">Client</option></select></div>
       <div className="field"><label>Mot de passe initial</label><input name="password" type="password" minLength={12} autoComplete="new-password" required /></div>
-      <div className="notice">Le portail client reste desactive en V1. Seuls les comptes internes peuvent etre crees ici.</div>
+      <div className="notice">Les comptes client sont cloisonnés : ils ne voient que les dossiers qui leur sont explicitement attribués.</div>
       {error && <div className="danger-text">{error}</div>}
-      <button className="button" disabled={busy}>{busy ? "Creation..." : "Creer l'utilisateur"}</button>
+      <button className="button" disabled={busy}>{busy ? "Création..." : "Créer l'utilisateur"}</button>
     </form>
     <section className="card">
       <h3>Utilisateurs</h3>
