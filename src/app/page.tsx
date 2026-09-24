@@ -2,9 +2,9 @@ import Link from "next/link";
 import PublicQuoteForm from "@/components/public-quote-form";
 
 const plans=[
-  {name:"Starter",price:"1 800 € HT",volume:"5 rapports / mois",text:"Pour démarrer avec les outils VarGéo.AI et industrialiser une production régulière."},
-  {name:"Pro",price:"3 200 € HT",volume:"10 rapports / mois",text:"Pour les bureaux d'études ayant une activité soutenue et plusieurs missions en parallèle."},
-  {name:"Expert",price:"5 500 € HT",volume:"Illimité raisonnable",text:"Pour une utilisation intensive, multi-dossiers, avec accès complet aux modules spécialisés."}
+  {name:"Starter",monthly:"690 € HT / mois",annual:"7 000 € HT / an",equivalent:"soit env. 583 € HT / mois",saving:"Économie annuelle : 1 280 € HT",volume:"5 rapports / mois",text:"Pour démarrer avec VarGéo.AI et industrialiser une production régulière.",popular:false},
+  {name:"Pro",monthly:"1 490 € HT / mois",annual:"15 000 € HT / an",equivalent:"soit 1 250 € HT / mois",saving:"Économie annuelle : 2 880 € HT",volume:"10 rapports / mois",text:"Pour les bureaux d'études ayant une activité soutenue et plusieurs missions en parallèle.",popular:true},
+  {name:"Expert",monthly:"2 490 € HT / mois",annual:"25 000 € HT / an",equivalent:"soit env. 2 083 € HT / mois",saving:"Économie annuelle : 4 880 € HT",volume:"25 rapports / mois · usage professionnel intensif",text:"Pour une utilisation intensive, multi-dossiers, avec accès complet aux modules spécialisés.",popular:false}
 ];
 
 export default function Home(){
@@ -78,7 +78,23 @@ export default function Home(){
     </section>\n\n    <section className="public-section" id="formules">
       <div className="eyebrow">Abonnements professionnels</div>
       <h2>Choisissez le niveau adapté à votre production</h2>
-      <div className="grid grid-3">{plans.map(p=><div className="card pricing-card" key={p.name}><div><div className="module-code">{p.name}</div><div className="pricing-price">{p.price}</div><strong>{p.volume}</strong><p className="muted">{p.text}</p></div><a className="button" href="#devis">Demander un devis</a></div>)}</div>
+      <p className="subtitle">Choisissez une facturation mensuelle sans engagement annuel, ou économisez avec l'abonnement 12 mois facturé annuellement.</p>
+      <div className="grid grid-3">{plans.map(p=><div className={`card pricing-card ${p.popular?"pricing-popular":""}`} key={p.name}>
+        <div>
+          <div className="pricing-head"><div className="module-code">{p.name}</div>{p.popular&&<span className="pricing-badge">La plus choisie</span>}</div>
+          <div className="pricing-price">{p.monthly}</div>
+          <strong>{p.volume}</strong>
+          <p className="muted">{p.text}</p>
+          <div className="pricing-annual">
+            <div className="pricing-annual-label">Offre annuelle</div>
+            <strong>{p.annual}</strong>
+            <span>{p.equivalent}</span>
+            <span className="success">{p.saving}</span>
+          </div>
+        </div>
+        <a className="button" href="#devis">Demander un devis</a>
+      </div>)}</div>
+      <p className="muted pricing-note">Tarifs HT. Offre annuelle avec engagement de 12 mois et facturation annuelle. Conditions d'usage et de volume précisées au devis.</p>
     </section>
 
     <section className="public-section">
