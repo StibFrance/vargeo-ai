@@ -56,6 +56,18 @@ export default function Home(){
           <h3>Projet résidentiel sur sous-sol hétérogène</h3>
           <p className="muted">Zonage géotechnique, portance, tassements et stratégie de fondation différente selon les secteurs.</p>
           <div className="toolbar"><span className="badge">M1 STRAT</span><span className="badge">M2 PRESSIO</span><span className="badge">M3 FONDA</span><span className="badge">M4 STAB</span></div>
+          <details className="example-details"><summary>Voir le workflow</summary>
+            <ol>
+              <li>QA/QC des sondages et détection des données insuffisantes.</li>
+              <li>Construction d'un modèle géotechnique par secteurs.</li>
+              <li>Vérifications de portance pressiométrique aux états limites.</li>
+              <li>Contrôle des tassements absolus et différentiels.</li>
+              <li>Détection d'un point bloquant si l'horizon porteur n'est pas reconnu.</li>
+              <li>Prescription de solutions de fondation différentes selon les zones.</li>
+            </ol>
+            <div className="result"><pre>{`q_net = k_p × pL* × iδ × iβ\nR_d,ELS = q_net / facteurs de sécurité\ns = vérification pressiométrique des tassements\nDécision = OK / À JUSTIFIER / BLOQUANT`}</pre></div>
+            <p><strong>Décision :</strong> fondations superficielles rigidifiées dans le secteur favorable ; reconnaissance complémentaire avant solution profonde dans le secteur hétérogène.</p>
+          </details>
         </article>
         <article className="card">
           <div className="module-code">SORTIE VARGÉO.AI</div>
