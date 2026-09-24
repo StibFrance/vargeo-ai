@@ -8,7 +8,7 @@ export async function POST(req:Request){
   try{
     const b=await req.json();
     if(clean(b.website)) return NextResponse.json({ok:true});
-    const name=clean(b.name,180),email=clean(b.email,220),phone=clean(b.phone,80),plan=clean(b.plan,80),city=clean(b.city,120),company=clean(b.company,180),message=clean(b.message,4000);
+    const name=clean(b.name,180),email=clean(b.email,220),phone=clean(b.phone,80),plan=clean(b.plan,80),billing=clean(b.billing,80),city=clean(b.city,120),company=clean(b.company,180),message=clean(b.message,4000);
     if(!name||!email||!message)return NextResponse.json({error:"Nom, e-mail et besoin sont requis."},{status:400});
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return NextResponse.json({error:"Adresse e-mail invalide."},{status:400});
 
@@ -22,6 +22,7 @@ export async function POST(req:Request){
       `Téléphone : ${phone||"Non renseigné"}`,
       `Ville : ${city||"Non renseignée"}`,
       `Formule : ${plan||"À définir"}`,
+      `Périodicité : ${billing||"À définir"}`,
       "",
       "Besoin :",
       message
