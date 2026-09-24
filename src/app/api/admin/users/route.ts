@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { hashPassword, requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 
-const roles = new Set(["admin", "engineer", "technician"]);
+const roles = new Set(["admin", "engineer", "technician", "client"]);
 
 export async function POST(req: Request) {
   try {
