@@ -3,7 +3,6 @@ import { db } from "@/lib/db";
 import {
   hashLoginKey,
   hashSessionToken,
-  isInternalRole,
   newSessionToken,
   sessionExpiry,
   SESSION_COOKIE,
@@ -48,9 +47,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Identifiants invalides" }, { status: 401 });
     }
 
-    if (!isInternalRole(user.role)) {
-      return NextResponse.json({ error: "Le portail client n'est pas active dans cette version." }, { status: 403 });
-    }
 
     await sql.query("DELETE FROM login_attempts WHERE email_hash=$1", [loginKey]);
     await sql.query("DELETE FROM sessions WHERE expires_at<=now()");
