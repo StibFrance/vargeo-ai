@@ -29,7 +29,30 @@ export default function Home(){
       </div>
     </section>
 
-    <section className="public-section" id="exemples"><div className="eyebrow">Démonstrations techniques</div><h2>Exemples VarGéo.AI</h2></section>\n\n    <section className="public-section" id="formules">
+    <section className="public-section" id="exemples">
+      <div className="eyebrow">Démonstrations techniques</div>
+      <h2>Deux cas pour comprendre VarGéo.AI</h2>
+      <p className="subtitle">Exemples reconstitués à partir de méthodes réellement utilisées, sans aucune donnée client identifiable.</p>
+      <div className="grid grid-3">
+        <article className="card">
+          <div className="module-code">EXEMPLE 01 · G5 / RGA</div>
+          <h3>Bâtiment fissuré sur sols sensibles aux variations hydriques</h3>
+          <p className="muted">Analyse croisée de la fissuration, du contexte hydrique, des fondations et de la chronologie.</p>
+          <div className="toolbar"><span className="badge">M1 STRAT</span><span className="badge">M3 FONDA</span><span className="badge">M5 SENSOR</span><span className="badge">M8 HYDRO</span></div>
+        </article>
+        <article className="card">
+          <div className="module-code">EXEMPLE 02 · G2 PRO</div>
+          <h3>Projet résidentiel sur sous-sol hétérogène</h3>
+          <p className="muted">Zonage géotechnique, portance, tassements et stratégie de fondation différente selon les secteurs.</p>
+          <div className="toolbar"><span className="badge">M1 STRAT</span><span className="badge">M2 PRESSIO</span><span className="badge">M3 FONDA</span><span className="badge">M4 STAB</span></div>
+        </article>
+        <article className="card">
+          <div className="module-code">SORTIE VARGÉO.AI</div>
+          <h3>Une décision technique traçable</h3>
+          <p className="muted">Entrées, contrôles, calculs, alertes, limites de mission et validation ingénieur réunis dans la même interface.</p>
+        </article>
+      </div>
+    </section>\n\n    <section className="public-section" id="formules">
       <div className="eyebrow">Abonnements professionnels</div>
       <h2>Choisissez le niveau adapté à votre production</h2>
       <div className="grid grid-3">{plans.map(p=><div className="card pricing-card" key={p.name}><div><div className="module-code">{p.name}</div><div className="pricing-price">{p.price}</div><strong>{p.volume}</strong><p className="muted">{p.text}</p></div><a className="button" href="#devis">Demander un devis</a></div>)}</div>
