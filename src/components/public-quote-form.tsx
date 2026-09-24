@@ -28,9 +28,10 @@ export default function PublicQuoteForm(){
     </div>
     <div className="grid grid-3">
       <div className="field"><label>Formule souhaitée</label><select name="plan" defaultValue="Pro"><option>Starter</option><option>Pro</option><option>Expert</option><option>À définir</option></select></div>
+      <div className="field"><label>Périodicité</label><select name="billing" defaultValue="Annuelle"><option>Mensuelle</option><option>Annuelle</option><option>À définir</option></select></div>
       <div className="field"><label>Ville</label><input name="city"/></div>
-      <div className="field"><label>Entreprise</label><input name="company"/></div>
     </div>
+    <div className="field"><label>Entreprise</label><input name="company"/></div>
     <div className="field"><label>Votre besoin</label><textarea name="message" placeholder="Décrivez votre activité, le nombre de rapports mensuels envisagé et vos besoins techniques." required/></div>
     <input name="website" tabIndex={-1} autoComplete="off" style={{display:"none"}}/>
     {message&&<div className="success">{message}</div>}
