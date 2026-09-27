@@ -4,5 +4,9 @@
   "buildCommand": "npm run build",
   "regions": [
     "cdg1"
+  ],
+  "alias": [
+    "vargeo.ai",
+    "www.vargeo.ai"
   ]
 }
