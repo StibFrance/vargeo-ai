@@ -2,9 +2,27 @@ import Link from "next/link";
 import PublicQuoteForm from "@/components/public-quote-form";
 
 const plans=[
-  {name:"Starter",monthly:"690 € HT / mois",annual:"7 000 € HT / an",equivalent:"soit env. 583 € HT / mois",saving:"Économie annuelle : 1 280 € HT",volume:"5 rapports / mois",text:"Pour démarrer avec VarGéo.AI et industrialiser une production régulière.",popular:false},
-  {name:"Pro",monthly:"1 490 € HT / mois",annual:"15 000 € HT / an",equivalent:"soit 1 250 € HT / mois",saving:"Économie annuelle : 2 880 € HT",volume:"10 rapports / mois",text:"Pour les bureaux d'études ayant une activité soutenue et plusieurs missions en parallèle.",popular:true},
-  {name:"Expert",monthly:"2 490 € HT / mois",annual:"25 000 € HT / an",equivalent:"soit env. 2 083 € HT / mois",saving:"Économie annuelle : 4 880 € HT",volume:"25 rapports / mois · usage professionnel intensif",text:"Pour une utilisation intensive, multi-dossiers, avec accès complet aux modules spécialisés.",popular:false}
+  {
+    name:"Starter",
+    label:"Essentiel",
+    text:"Pour une structure qui souhaite intégrer VarGéo.AI progressivement dans sa production.",
+    points:["Accès aux fonctions essentielles","Dossiers sécurisés et traçables","Modules techniques selon configuration","Production documentaire assistée"],
+    popular:false
+  },
+  {
+    name:"Pro",
+    label:"Bureau d'études",
+    text:"Pour les équipes qui gèrent plusieurs dossiers simultanément et souhaitent accélérer leur production.",
+    points:["Usage multi-dossiers","Fonctions avancées","Assistant VarGéo.AI","Traçabilité et contrôles renforcés"],
+    popular:true
+  },
+  {
+    name:"Expert",
+    label:"Usage intensif",
+    text:"Pour les organisations ayant un volume élevé, plusieurs utilisateurs ou des besoins spécifiques.",
+    points:["Usage intensif","Accès étendu aux modules","Configuration adaptée à l'organisation","Accompagnement renforcé"],
+    popular:false
+  }
 ];
 
 export default function Home(){
@@ -65,7 +83,10 @@ export default function Home(){
               <li>Détection d'un point bloquant si l'horizon porteur n'est pas reconnu.</li>
               <li>Prescription de solutions de fondation différentes selon les zones.</li>
             </ol>
-            <div className="result"><pre>{`q_net = k_p × pL* × iδ × iβ\nR_d,ELS = q_net / facteurs de sécurité\ns = vérification pressiométrique des tassements\nDécision = OK / À JUSTIFIER / BLOQUANT`}</pre></div>
+            <div className="result"><pre>{`q_net = k_p × pL* × iδ × iβ
+R_d,ELS = q_net / facteurs de sécurité
+s = vérification pressiométrique des tassements
+Décision = OK / À JUSTIFIER / BLOQUANT`}</pre></div>
             <p><strong>Décision :</strong> fondations superficielles rigidifiées dans le secteur favorable ; reconnaissance complémentaire avant solution profonde dans le secteur hétérogène.</p>
           </details>
         </article>
@@ -75,26 +96,34 @@ export default function Home(){
           <p className="muted">Entrées, contrôles, calculs, alertes, limites de mission et validation ingénieur réunis dans la même interface.</p>
         </article>
       </div>
-    </section>\n\n    <section className="public-section" id="formules">
+    </section>
+
+    <section className="public-section" id="formules">
       <div className="eyebrow">Abonnements professionnels</div>
-      <h2>Choisissez le niveau adapté à votre production</h2>
-      <p className="subtitle">Choisissez une facturation mensuelle sans engagement annuel, ou économisez avec l'abonnement 12 mois facturé annuellement.</p>
-      <div className="grid grid-3">{plans.map(p=><div className={`card pricing-card ${p.popular?"pricing-popular":""}`} key={p.name}>
-        <div>
-          <div className="pricing-head"><div className="module-code">{p.name}</div>{p.popular&&<span className="pricing-badge">La plus choisie</span>}</div>
-          <div className="pricing-price">{p.monthly}</div>
-          <strong>{p.volume}</strong>
-          <p className="muted">{p.text}</p>
-          <div className="pricing-annual">
-            <div className="pricing-annual-label">Offre annuelle</div>
-            <strong>{p.annual}</strong>
-            <span>{p.equivalent}</span>
-            <span className="success">{p.saving}</span>
+      <h2>Des formules adaptées à votre niveau d'utilisation</h2>
+
+      <div className="pricing-callout">
+        <span>Abonnement VarGéo.AI</span>
+        <strong>À partir de 690 € HT / mois</strong>
+        <small>Le tarif final dépend du volume d'utilisation, des modules activés, du nombre d'utilisateurs et du niveau d'accompagnement.</small>
+      </div>
+
+      <div className="grid grid-3">
+        {plans.map(p=><div className={`card pricing-card ${p.popular?"pricing-popular":""}`} key={p.name}>
+          <div>
+            <div className="pricing-head">
+              <div><div className="module-code">{p.name}</div><div className="muted" style={{marginTop:4}}>{p.label}</div></div>
+              {p.popular&&<span className="pricing-badge">La plus choisie</span>}
+            </div>
+            <p>{p.text}</p>
+            <ul className="pricing-points">{p.points.map(x=><li key={x}>{x}</li>)}</ul>
+            <div className="pricing-custom">Tarification personnalisée sur devis</div>
           </div>
-        </div>
-        <a className="button" href="#devis">Demander un devis</a>
-      </div>)}</div>
-      <p className="muted pricing-note">Tarifs HT. Offre annuelle avec engagement de 12 mois et facturation annuelle. Conditions d'usage et de volume précisées au devis.</p>
+          <a className="button" href="#devis">Demander une proposition</a>
+        </div>)}
+      </div>
+
+      <p className="muted pricing-note">Facturation mensuelle ou annuelle possible. Les conditions d'usage, volumes, options et éventuels services complémentaires sont précisés dans la proposition commerciale.</p>
     </section>
 
     <section className="public-section">
