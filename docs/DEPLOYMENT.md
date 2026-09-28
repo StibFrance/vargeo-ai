@@ -1,31 +1,82 @@
-# Deploiement cible VarGeo.AI
+# Déploiement VarGéo.AI V2
 
-## Isolation obligatoire
+## Architecture active
 
-VarGeo.AI doit disposer de son propre projet Neon, de son propre projet Vercel et de ses propres secrets. Ne pas reutiliser le projet Neon `STIB One Production`, sa base `stib_one`, ni le projet Vercel `stib-france-live`.
+La production est isolée de STIB One et repose sur :
 
-## Ordre de mise en service
+- dépôt GitHub `StibFrance/vargeo-ai` ;
+- projet Railway `VarGeo AI` ;
+- service web Railway `vargeo-ai-web` ;
+- service PostgreSQL Railway dédié ;
+- domaine `vargeo.ai` ;
+- Preview Vercel automatique pour les pull requests.
 
-1. Creer le depot GitHub separe `StibFrance/vargeo-ai`.
-2. Creer le projet Vercel separe `vargeo-ai`.
-3. Creer le projet Neon separe `VarGeo AI Production` en Europe.
-4. Recuperer une URL poolee pour `DATABASE_URL` et une URL directe pour `DATABASE_URL_UNPOOLED`.
-5. Configurer `AUTH_SECRET` avec au moins 32 caracteres aleatoires.
-6. Configurer `ADMIN_EMAIL` et un `ADMIN_PASSWORD` robuste uniquement pour l'initialisation.
-7. Executer `npm run db:migrate` avec la connexion directe.
-8. Executer `npm run db:seed` une seule fois pour initialiser l'administrateur.
-9. Executer `npm run verify`.
-10. Deployer une Preview Vercel, verifier `/api/health`, puis faire la recette fonctionnelle.
-11. Promouvoir en Production uniquement apres validation des neuf modules.
+Ne pas réutiliser la base ou les secrets de STIB One.
 
-## IA
+## Procédure de livraison
 
-Variables optionnelles : `AI_GATEWAY_BASE_URL`, `AI_GATEWAY_API_KEY`, `AI_MODEL`. Les neuf moteurs de calcul restent utilisables sans IA.
+1. Développer sur une branche dédiée.
+2. Ouvrir une pull request.
+3. Attendre un état Vercel Preview `Ready`.
+4. Fusionner sur `main`.
+5. Déclencher/observer le déploiement Railway.
+6. Le pre-deploy exécute automatiquement `npm run db:migrate`.
+7. Exiger un état Railway final `SUCCESS`.
+8. Contrôler les logs : migrations, compilation Next.js et démarrage.
+9. Vérifier le healthcheck `/api/health`.
+10. Ne considérer la livraison terminée qu'après ces contrôles.
 
-## Securite V1
+## Variables indispensables
 
-- Sessions opaques, jetons hashes, cookie HttpOnly/SameSite=Strict.
-- Limitation des tentatives de connexion : 5 echecs sur 15 minutes.
-- Validation des calculs et approbation des rapports reservees aux ingenieurs et administrateurs.
-- Portail client desactive tant que l'isolation par affaire n'est pas implementee et recetee.
-- Endpoint de supervision : `GET /api/health`.
+### Application
+
+- `DATABASE_URL`
+- `DATABASE_URL_UNPOOLED`
+- `AUTH_SECRET`
+- `ADMIN_EMAIL`
+- `ADMIN_PASSWORD`
+- `NEXT_PUBLIC_APP_NAME`
+
+### IA
+
+- `AI_GATEWAY_BASE_URL`
+- `AI_GATEWAY_API_KEY` — secret obligatoire pour activer les appels génératifs
+- `AI_MODEL`
+- `AI_MODEL_CRITIC`
+- `AI_MODEL_SYNTHESIS`
+- `AI_MODEL_FALLBACKS`
+- `AI_MAX_QUESTION_CHARS`
+- `AI_MAX_RUNS_PER_HOUR`
+- `AI_MAX_CONCURRENT_RUNS`
+
+La présence des modèles et de l'URL sans `AI_GATEWAY_API_KEY` ne rend pas l'IA active. L'interface affiche alors explicitement que la passerelle est en attente de clé.
+
+## Migrations en production
+
+Le service web possède le pre-deploy suivant :
+
+`npm run db:migrate`
+
+Les migrations sont idempotentes et enregistrées dans `schema_migrations`. Ne pas appliquer manuellement une migration déjà enregistrée.
+
+## Stockage documentaire
+
+Les documents techniques sont :
+
+- enregistrés dans `knowledge_documents` ;
+- découpés en passages dans `knowledge_chunks` ;
+- recherchés avec l'index plein texte PostgreSQL ;
+- conservés sous forme originale dans la base pour les fichiers actuellement limités à 20 Mo.
+
+Un stockage objet pourra remplacer la conservation binaire en base ultérieurement sans modifier le modèle de recherche.
+
+## Sécurité opérationnelle
+
+- Cookies de session HttpOnly / SameSite=Strict.
+- Limitation des tentatives de connexion.
+- Cloisonnement des affaires par organisation et membres du projet.
+- Calculs et rapports soumis à validation humaine.
+- Documents traités comme données non fiables vis-à-vis des prompts.
+- Quotas et concurrence limités pour les exécutions IA.
+- Audit des exécutions, modèles et documents récupérés.
+- Aucun secret ne doit être stocké dans le dépôt GitHub.
