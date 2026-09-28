@@ -26,7 +26,7 @@ export default async function ProjectDetail({params}:{params:Promise<{id:string}
     sql.query("SELECT id,title,mission_type,status,current_version,updated_at FROM reports WHERE project_id=$1 ORDER BY updated_at DESC",[id]),
     sql.query(`SELECT count(DISTINCT b.id)::int boreholes,count(pt.id)::int pressio FROM boreholes b LEFT JOIN pressio_tests pt ON pt.borehole_id=b.id WHERE b.project_id=$1`,[id]),
     user.role==="client" ? Promise.resolve([]) : sql.query(
-      "SELECT id,title,document_type,source_reference,status,created_at FROM knowledge_documents WHERE project_id=$1 AND status<>'archived' ORDER BY created_at DESC",
+      "SELECT id,title,document_type,source_reference,status,created_at,(original_file IS NOT NULL) has_original FROM knowledge_documents WHERE project_id=$1 AND status<>'archived' ORDER BY created_at DESC",
       [id]
     )
   ]);
@@ -91,7 +91,11 @@ export default async function ProjectDetail({params}:{params:Promise<{id:string}
         {documents.map((d:any)=><div key={d.id} style={{padding:"12px 0",borderBottom:"1px solid var(--line)"}}>
           <strong>{d.title}</strong>
           <div className="muted">{d.document_type||"source"}{d.source_reference?` · ${d.source_reference}`:""}</div>
-          <div className="toolbar" style={{marginTop:6}}><span className="badge">{d.status}</span><span className="muted" style={{fontSize:12}}>{new Date(d.created_at).toLocaleString("fr-FR")}</span></div>
+          <div className="toolbar" style={{marginTop:6}}>
+            <span className="badge">{d.status}</span>
+            {d.has_original&&<a className="button secondary" href={`/api/knowledge/${d.id}/file`}>Télécharger l’original</a>}
+            <span className="muted" style={{fontSize:12}}>{new Date(d.created_at).toLocaleString("fr-FR")}</span>
+          </div>
         </div>)}
         {!documents.length&&<p className="muted">Aucune source documentaire indexée pour cette affaire.</p>}
       </section>
