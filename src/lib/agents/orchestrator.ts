@@ -67,9 +67,9 @@ async function executeAgent(args: {
 
     await sql.query(
       `UPDATE ai_agent_steps
-       SET status='completed',model=$2,output=$3,completed_at=now()
+       SET status='completed',model=$2,output=$3,metadata=$4::jsonb,completed_at=now()
        WHERE id=$1`,
-      [stepId, response.model, response.text]
+      [stepId, response.model, response.text, JSON.stringify({ usage: response.usage })]
     );
 
     return {
