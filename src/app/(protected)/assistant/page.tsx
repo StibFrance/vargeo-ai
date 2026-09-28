@@ -1,2 +1,32 @@
-import { redirect } from "next/navigation";import { requireUser,projectScope } from "@/lib/auth";import { db } from "@/lib/db";import AiAssistant from "@/components/ai-assistant";
-export default async function AssistantPage(){const user=await requireUser();if(user.role==="client")redirect("/affaires");const scope=projectScope(user,"p",1);const projects=await db().query(`SELECT p.id,p.code,p.title FROM projects p WHERE ${scope.clause} AND p.status<>'archived' ORDER BY p.created_at DESC LIMIT 100`,scope.params);return <div className="content"><div className="hero"><div><div className="eyebrow">Assistant technique</div><h1 className="title">VarGéo.AI Copilot</h1><p className="subtitle">Assistant de synthèse et de contrôle, séparé des moteurs de calcul déterministes.</p></div></div><AiAssistant projects={projects as any}/></div>}
+import { redirect } from "next/navigation";
+import { requireUser,projectScope } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { aiRuntimeStatus } from "@/lib/ai-governance";
+import AiAssistant from "@/components/ai-assistant";
+
+export default async function AssistantPage(){
+  const user=await requireUser();
+  if(user.role==="client") redirect("/affaires");
+  const scope=projectScope(user,"p",1);
+  const projects=await db().query(
+    `SELECT p.id,p.code,p.title FROM projects p
+     WHERE ${scope.clause} AND p.status<>'archived'
+     ORDER BY p.created_at DESC LIMIT 100`,
+    scope.params
+  );
+  const runtime=aiRuntimeStatus();
+  return <div className="content">
+    <div className="hero"><div>
+      <div className="eyebrow">Assistant technique</div>
+      <h1 className="title">VarGéo.AI Copilot</h1>
+      <p className="subtitle">Assistant multi-agents de synthèse et de contrôle, séparé des moteurs de calcul déterministes.</p>
+    </div></div>
+    <AiAssistant projects={projects as any} runtime={{
+      configured:runtime.configured,
+      model:runtime.model,
+      criticModel:runtime.criticModel,
+      synthesisModel:runtime.synthesisModel,
+      maxQuestionChars:runtime.limits.maxQuestionChars
+    }}/>
+  </div>;
+}
