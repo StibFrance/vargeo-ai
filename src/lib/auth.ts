@@ -60,7 +60,7 @@ export function isInternalRole(role: UserRole) {
 export function projectScope(user: CurrentUser, alias = "p", paramOffset = 1) {
   if (user.role === "client") {
     return {
-      clause: `${alias}.organization_id=${paramOffset} AND EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=${alias}.id AND pm.user_id=${paramOffset + 1})`,
+      clause: `${alias}.organization_id=$${paramOffset} AND EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id=${alias}.id AND pm.user_id=$${paramOffset + 1})`,
       params: [user.organization_id, user.id] as unknown[],
     };
   }
