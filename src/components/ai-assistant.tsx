@@ -4,8 +4,15 @@ import { FormEvent, useState } from "react";
 type P = { id: string; code: string; title: string };
 type AgentBadge = { code: string; name: string; status: "completed" | "failed" };
 type SourceRef = { id:string; title:string; reference?:string|null; page?:number|null };
+type RuntimeStatus = {
+  configured:boolean;
+  model:string|null;
+  criticModel:string|null;
+  synthesisModel:string|null;
+  maxQuestionChars:number;
+};
 
-export default function AiAssistant({ projects }: { projects: P[] }) {
+export default function AiAssistant({ projects, runtime }: { projects: P[]; runtime:RuntimeStatus }) {
   const [answer, setAnswer] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -15,6 +22,10 @@ export default function AiAssistant({ projects }: { projects: P[] }) {
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if(!runtime.configured){
+      setError("La passerelle de modèle n'est pas encore configurée sur cet environnement.");
+      return;
+    }
     setBusy(true); setError(""); setAnswer(""); setAgents([]); setSources([]); setStatus("");
     const fd = new FormData(e.currentTarget);
     const res = await fetch("/api/ai", {
@@ -34,6 +45,15 @@ export default function AiAssistant({ projects }: { projects: P[] }) {
   return (
     <div className="split">
       <form className="card form" onSubmit={submit}>
+        <div className={runtime.configured ? "notice" : "notice"} style={{marginBottom:12}}>
+          <strong>{runtime.configured ? "Moteur IA prêt" : "Moteur IA en attente de passerelle"}</strong>
+          <div className="muted" style={{marginTop:4}}>
+            {runtime.configured
+              ? `Principal : ${runtime.model} · Contradicteur : ${runtime.criticModel} · Synthèse : ${runtime.synthesisModel}`
+              : "Les calculs, dossiers et la base documentaire restent disponibles. Aucun appel IA n'est lancé tant qu'une clé de passerelle valide n'est pas présente."}
+          </div>
+        </div>
+
         <div className="field">
           <label>Contexte affaire</label>
           <select name="projectId" defaultValue="">
@@ -43,13 +63,21 @@ export default function AiAssistant({ projects }: { projects: P[] }) {
         </div>
         <div className="field">
           <label>Question technique</label>
-          <textarea name="question" placeholder="Ex. Analyse contradictoirement cette G2 PRO et liste les points à vérifier avant validation…" required />
+          <textarea
+            name="question"
+            maxLength={runtime.maxQuestionChars}
+            placeholder="Ex. Analyse contradictoirement cette G2 PRO et liste les points à vérifier avant validation…"
+            required
+          />
+          <div className="muted" style={{fontSize:12}}>Maximum {runtime.maxQuestionChars.toLocaleString("fr-FR")} caractères.</div>
         </div>
         <div className="notice">
           VarGéo.AI V2 confronte plusieurs agents experts et recherche d'abord les pièces indexées de l'affaire. Toute conclusion doit être validée par un ingénieur.
         </div>
         {error && <div className="danger-text">{error}</div>}
-        <button className="button" disabled={busy}>{busy ? "Analyse multi-agents…" : "Interroger VarGéo.AI"}</button>
+        <button className="button" disabled={busy||!runtime.configured}>
+          {busy ? "Analyse multi-agents…" : runtime.configured ? "Interroger VarGéo.AI" : "Passerelle IA non configurée"}
+        </button>
       </form>
 
       <section className="card">
