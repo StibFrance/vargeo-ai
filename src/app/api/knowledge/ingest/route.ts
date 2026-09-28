@@ -27,6 +27,7 @@ export async function POST(req:Request){
 
     const text=await extractTextFromFile(file);
     if(text.trim().length<20) return NextResponse.json({error:"Aucun texte exploitable détecté"},{status:422});
+    if(text.length>2_500_000) return NextResponse.json({error:"Document trop volumineux après extraction (2,5 millions de caractères maximum)"},{status:413});
 
     const result=await ingestKnowledgeText({
       organizationId:user.organization_id,
@@ -40,21 +41,22 @@ export async function POST(req:Request){
       metadata:{filename:file.name,size:file.size}
     });
 
-    if(!result.duplicate){
-      const bytes=Buffer.from(await file.arrayBuffer());
-      await db().query("UPDATE knowledge_documents SET original_file=$2,updated_at=now() WHERE id=$1",[result.documentId,bytes]);
-    }
+    const bytes=Buffer.from(await file.arrayBuffer());
+    await db().query(
+      "UPDATE knowledge_documents SET original_file=COALESCE(original_file,$2),updated_at=now() WHERE id=$1",
+      [result.documentId,bytes]
+    );
 
     await db().query(
       `INSERT INTO audit_log(organization_id,user_id,action,entity_type,entity_id,details)
        VALUES($1,$2,'knowledge_ingest','knowledge_document',$3,$4::jsonb)`,
       [user.organization_id,user.id,result.documentId,JSON.stringify({
         projectId,title,filename:file.name,size:file.size,chunkCount:result.chunkCount,
-        duplicate:result.duplicate,originalStored:!result.duplicate
+        duplicate:result.duplicate,originalStored:true
       })]
     );
 
-    return NextResponse.json({...result,originalStored:!result.duplicate});
+    return NextResponse.json({...result,originalStored:true});
   }catch(error){
     console.error(error);
     return NextResponse.json({error:error instanceof Error?error.message:"Ingestion impossible"},{status:500});
