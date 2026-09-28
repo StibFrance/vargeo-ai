@@ -1,2 +1,94 @@
-"use client";import { FormEvent,useState } from "react";
-type P={id:string;code:string;title:string};export default function AiAssistant({projects}:{projects:P[]}){const[answer,setAnswer]=useState("");const[error,setError]=useState("");const[busy,setBusy]=useState(false);async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError("");setAnswer("");const fd=new FormData(e.currentTarget);const res=await fetch("/api/ai",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(Object.fromEntries(fd.entries()))});const data=await res.json().catch(()=>({}));setBusy(false);if(!res.ok){setError(data.error||"Assistant indisponible");return;}setAnswer(data.answer);}return <div className="split"><form className="card form" onSubmit={submit}><div className="field"><label>Contexte affaire</label><select name="projectId" defaultValue=""><option value="">Sans affaire</option>{projects.map(p=><option key={p.id} value={p.id}>{p.code} — {p.title}</option>)}</select></div><div className="field"><label>Question technique</label><textarea name="question" placeholder="Ex. Synthétise les points à vérifier avant validation de cette G2 PRO…" required/></div><div className="notice">L'assistant ne remplace pas les moteurs de calcul. Il exploite les données tracées et doit signaler ce qui manque.</div>{error&&<div className="danger-text">{error}</div>}<button className="button" disabled={busy}>{busy?"Analyse…":"Interroger VarGéo.AI"}</button></form><section className="card"><h3>Réponse</h3>{answer?<div className="result" style={{whiteSpace:"pre-wrap",lineHeight:1.65}}>{answer}</div>:<p className="muted">La réponse apparaîtra ici.</p>}</section></div>}
+"use client";
+import { FormEvent, useState } from "react";
+
+type P = { id: string; code: string; title: string };
+type AgentBadge = { code: string; name: string; status: "completed" | "failed" };
+
+export default function AiAssistant({ projects }: { projects: P[] }) {
+  const [answer, setAnswer] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [agents, setAgents] = useState<AgentBadge[]>([]);
+  const [status, setStatus] = useState<string>("");
+
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    setAnswer("");
+    setAgents([]);
+    setStatus("");
+
+    const fd = new FormData(e.currentTarget);
+    const res = await fetch("/api/ai", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(Object.fromEntries(fd.entries()))
+    });
+    const data = await res.json().catch(() => ({}));
+    setBusy(false);
+
+    if (!res.ok) {
+      setError(data.error || "Assistant indisponible");
+      return;
+    }
+
+    setAnswer(data.answer || "");
+    setAgents(Array.isArray(data.agents) ? data.agents : []);
+    setStatus(data.status || "");
+  }
+
+  return (
+    <div className="split">
+      <form className="card form" onSubmit={submit}>
+        <div className="field">
+          <label>Contexte affaire</label>
+          <select name="projectId" defaultValue="">
+            <option value="">Sans affaire</option>
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>{p.code} — {p.title}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="field">
+          <label>Question technique</label>
+          <textarea
+            name="question"
+            placeholder="Ex. Analyse contradictoirement cette G2 PRO et liste les points à vérifier avant validation…"
+            required
+          />
+        </div>
+
+        <div className="notice">
+          VarGéo.AI V2 confronte plusieurs agents experts. Les moteurs de calcul restent déterministes et toute conclusion doit être validée par un ingénieur.
+        </div>
+
+        {error && <div className="danger-text">{error}</div>}
+        <button className="button" disabled={busy}>
+          {busy ? "Analyse multi-agents…" : "Interroger VarGéo.AI"}
+        </button>
+      </form>
+
+      <section className="card">
+        <h3>Réponse experte</h3>
+        {agents.length > 0 && (
+          <div className="toolbar" style={{ marginBottom: 16 }}>
+            {agents.map((agent) => (
+              <span className="badge" key={agent.code} title={agent.name}>
+                {agent.code} · {agent.status === "completed" ? "OK" : "ÉCHEC"}
+              </span>
+            ))}
+            {status && <span className="badge">Pipeline · {status}</span>}
+          </div>
+        )}
+
+        {answer ? (
+          <div className="result" style={{ whiteSpace: "pre-wrap", lineHeight: 1.65 }}>{answer}</div>
+        ) : (
+          <p className="muted">La réponse consolidée des agents apparaîtra ici.</p>
+        )}
+      </section>
+    </div>
+  );
+}
