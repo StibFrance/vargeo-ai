@@ -22,17 +22,27 @@ function configuredModel(explicit?: string | null) {
   return explicit || process.env.AI_MODEL || null;
 }
 
+function configuredFallbacks(primary:string){
+  return String(process.env.AI_MODEL_FALLBACKS||"")
+    .split(",")
+    .map((x)=>x.trim())
+    .filter((x,index,all)=>Boolean(x)&&x!==primary&&all.indexOf(x)===index)
+    .slice(0,4);
+}
+
 export async function aiTextDetailed(messages: ChatMessage[], options: AiTextOptions = {}): Promise<AiTextResult> {
   const base = process.env.AI_GATEWAY_BASE_URL;
   const key = process.env.AI_GATEWAY_API_KEY;
   const model = configuredModel(options.model);
   if (!base || !key || !model) return { text: null, model, usage: null };
 
+  const fallbacks=configuredFallbacks(model);
   const response = await fetch(`${base.replace(/\/$/, "")}/chat/completions`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
     body: JSON.stringify({
       model,
+      ...(fallbacks.length ? {models:fallbacks} : {}),
       messages,
       temperature: options.temperature ?? 0.15
     }),
