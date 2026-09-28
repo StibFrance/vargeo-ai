@@ -65,7 +65,7 @@ export function projectScope(user: CurrentUser, alias = "p", paramOffset = 1) {
     };
   }
   return {
-    clause: `${alias}.organization_id=${paramOffset}`,
+    clause: `${alias}.organization_id=$${paramOffset}`,
     params: [user.organization_id] as unknown[],
   };
 }
