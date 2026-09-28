@@ -4,6 +4,7 @@ import { requireUser, projectScope } from "@/lib/auth";
 import { db } from "@/lib/db";
 import ValidateAnalysisButton from "@/components/validate-analysis-button";
 import ProjectMembersPanel from "@/components/project-members-panel";
+import KnowledgeUpload from "@/components/knowledge-upload";
 
 export default async function ProjectDetail({params}:{params:Promise<{id:string}>}){
   const {id}=await params;
@@ -20,10 +21,14 @@ export default async function ProjectDetail({params}:{params:Promise<{id:string}
   const p:any=projects[0];
   if(!p)notFound();
 
-  const [analyses,reports,tests]=await Promise.all([
+  const [analyses,reports,tests,documents]=await Promise.all([
     sql.query("SELECT id,module_code,title,status,calculation_version,created_at,outputs FROM analyses WHERE project_id=$1 ORDER BY created_at DESC",[id]),
     sql.query("SELECT id,title,mission_type,status,current_version,updated_at FROM reports WHERE project_id=$1 ORDER BY updated_at DESC",[id]),
-    sql.query(`SELECT count(DISTINCT b.id)::int boreholes,count(pt.id)::int pressio FROM boreholes b LEFT JOIN pressio_tests pt ON pt.borehole_id=b.id WHERE b.project_id=$1`,[id])
+    sql.query(`SELECT count(DISTINCT b.id)::int boreholes,count(pt.id)::int pressio FROM boreholes b LEFT JOIN pressio_tests pt ON pt.borehole_id=b.id WHERE b.project_id=$1`,[id]),
+    user.role==="client" ? Promise.resolve([]) : sql.query(
+      "SELECT id,title,document_type,source_reference,status,created_at FROM knowledge_documents WHERE project_id=$1 AND status<>'archived' ORDER BY created_at DESC",
+      [id]
+    )
   ]);
 
   const clients=user.role==="admin"
@@ -47,13 +52,13 @@ export default async function ProjectDetail({params}:{params:Promise<{id:string}
         <h1 className="title">{p.title}</h1>
         <p className="subtitle">{[p.address,p.postal_code,p.city].filter(Boolean).join(" ")||"Adresse non renseignée"} · Client : {p.client_name||"non renseigné"}</p>
       </div>
-      {internal&&<div className="toolbar"><Link className="button" href="/modules">Nouveau calcul</Link><Link className="button secondary" href="/reports">Créer un rapport</Link></div>}
+      {internal&&<div className="toolbar"><Link className="button" href="/modules">Nouveau calcul</Link><Link className="button secondary" href="/reports">Créer un rapport</Link><Link className="button secondary" href="/assistant">Interroger VarGéo.AI</Link></div>}
     </div>
 
     <div className="grid grid-3" style={{marginBottom:18}}>
       <div className="card"><div className="muted">Sondages</div><div className="metric">{String((tests[0] as any)?.boreholes??0)}</div></div>
       <div className="card"><div className="muted">Essais pressiométriques</div><div className="metric">{String((tests[0] as any)?.pressio??0)}</div></div>
-      <div className="card"><div className="muted">Calculs</div><div className="metric">{analyses.length}</div></div>
+      <div className="card"><div className="muted">Sources VarGéo.AI</div><div className="metric">{documents.length}</div></div>
     </div>
 
     <div className="split">
@@ -78,6 +83,19 @@ export default async function ProjectDetail({params}:{params:Promise<{id:string}
         {!reports.length&&<p className="muted">Aucun rapport.</p>}
       </section>
     </div>
+
+    {internal&&<div className="split" style={{marginTop:18}}>
+      <KnowledgeUpload projectId={id}/>
+      <section className="card">
+        <h3>Sources indexées</h3>
+        {documents.map((d:any)=><div key={d.id} style={{padding:"12px 0",borderBottom:"1px solid var(--line)"}}>
+          <strong>{d.title}</strong>
+          <div className="muted">{d.document_type||"source"}{d.source_reference?` · ${d.source_reference}`:""}</div>
+          <div className="toolbar" style={{marginTop:6}}><span className="badge">{d.status}</span><span className="muted" style={{fontSize:12}}>{new Date(d.created_at).toLocaleString("fr-FR")}</span></div>
+        </div>)}
+        {!documents.length&&<p className="muted">Aucune source documentaire indexée pour cette affaire.</p>}
+      </section>
+    </div>}
 
     {user.role==="admin"&&<ProjectMembersPanel projectId={id} clients={clients as any}/>}
   </div>;
