@@ -1,6 +1,6 @@
 {
   "name": "vargeo-ai",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -14,17 +14,19 @@
     "test:docx": "node scripts/test-docx.mjs"
   },
   "dependencies": {
+    "mammoth": "1.12.3",
     "next": "16.3.5",
+    "pdf-parse": "2.4.5",
+    "pg": "8.16.3",
     "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "pg": "8.16.3"
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@types/node": "latest",
+    "@types/pg": "8.15.5",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "typescript": "5.8.3",
-    "@types/pg": "8.15.5"
+    "typescript": "5.8.3"
   },
   "engines": {
     "node": "24.x"
