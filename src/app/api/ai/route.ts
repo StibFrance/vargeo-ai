@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { runExpertOrchestration } from "@/lib/agents/orchestrator";
 import { knowledgeReferences, searchKnowledge } from "@/lib/knowledge/search";
 import type { AnalysisContext, KnowledgeSourceContext, ProjectContext } from "@/lib/agents/types";
+import { assertAiCapacity, aiRuntimeStatus } from "@/lib/ai-governance";
 
 export async function POST(req: Request) {
   try {
@@ -13,6 +14,10 @@ export async function POST(req: Request) {
     const { projectId, question } = await req.json();
     const cleanQuestion = String(question || "").trim();
     if (!cleanQuestion) return NextResponse.json({ error: "Question requise" }, { status: 400 });
+
+    const runtime=aiRuntimeStatus();
+    if(!runtime.configured) return NextResponse.json({error:"La couche IA n'est pas configurée dans l'environnement de déploiement."},{status:503});
+    await assertAiCapacity({organizationId:user.organization_id,userId:user.id,question:cleanQuestion});
 
     const sql = db();
     let project: ProjectContext | null = null;
@@ -89,9 +94,10 @@ export async function POST(req: Request) {
     console.error(error);
     const message = error instanceof Error ? error.message : "Assistant indisponible";
     const notConfigured = /non configurée|non configuree|réponse vide|reponse vide/i.test(message);
+    const limited = /Quota horaire|Trop d'analyses|Question trop longue/.test(message);
     return NextResponse.json(
-      { error: notConfigured ? "La couche IA n'est pas configurée dans l'environnement de déploiement." : "Assistant indisponible" },
-      { status: notConfigured ? 503 : 500 }
+      { error: notConfigured ? "La couche IA n'est pas configurée dans l'environnement de déploiement." : limited ? message : "Assistant indisponible" },
+      { status: notConfigured ? 503 : limited ? 429 : 500 }
     );
   }
 }
