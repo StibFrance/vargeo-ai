@@ -17,19 +17,19 @@ export default function KnowledgeUpload({projectId}:{projectId:string}){
     const data=await res.json().catch(()=>({}));
     setBusy(false);
     if(!res.ok){setError(data.error||"Import impossible");return;}
-    setMessage(data.duplicate?"Document déjà indexé.":`Document indexé : ${data.chunkCount} passage(s).`);
+    setMessage(data.duplicate?"Document déjà indexé.":`Document conservé et indexé : ${data.chunkCount} passage(s).`);
     e.currentTarget.reset();
     router.refresh();
   }
 
   return <form className="card form" onSubmit={submit}>
     <h3>Base documentaire VarGéo.AI</h3>
-    <p className="muted">Ajoutez les pièces techniques de l'affaire. PDF et DOCX sont extraits puis découpés en passages traçables pour les agents.</p>
+    <p className="muted">Ajoutez les pièces techniques de l'affaire. Le fichier original est conservé, puis son texte est extrait et découpé en passages traçables pour les agents.</p>
     <div className="field"><label>Titre</label><input name="title" required placeholder="Ex. Étude G2 AVP antérieure"/></div>
     <div className="field"><label>Type</label><select name="documentType" defaultValue="rapport"><option value="rapport">Rapport</option><option value="plan">Plan / note</option><option value="norme">Référence normative</option><option value="essai">Essais / résultats</option><option value="courrier">Courrier / expertise</option><option value="source">Autre source</option></select></div>
     <div className="field"><label>Référence</label><input name="sourceReference" placeholder="Référence, version, date…"/></div>
     <div className="field"><label>Fichier</label><input name="file" type="file" accept=".pdf,.docx,.txt,.md,.csv,.json,.html,text/*,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required/></div>
-    <div className="notice">Taille maximale : 20 Mo. Les documents importés restent rattachés à cette affaire et à votre organisation.</div>
+    <div className="notice">Taille maximale : 20 Mo. Accès réservé aux utilisateurs internes autorisés sur l'affaire.</div>
     {message&&<div className="success">{message}</div>}
     {error&&<div className="danger-text">{error}</div>}
     <button className="button" disabled={busy}>{busy?"Indexation…":"Ajouter à la base documentaire"}</button>
