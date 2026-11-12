@@ -5,6 +5,7 @@ type ReportContent = {
   cover?: { title?: unknown; code?: unknown; mission?: unknown; address?: unknown };
   ai_synthesis?: unknown;
   sections?: ReportSection[];
+  annexes?: Array<{ key?: string; title?: string; source?: string; content?: unknown; boreholes?: unknown }>;
 };
 
 function xmlEscape(value: unknown) {
@@ -122,6 +123,16 @@ export function buildReportDocx(content: ReportContent) {
   for (const section of content.sections ?? []) {
     body.push(paragraph(section.title ?? section.key ?? "Section", { bold: true, size: 28, after: 100 }));
     body.push(contentParagraphs(section.content));
+  }
+
+  if ((content.annexes ?? []).length) {
+    body.push(paragraph("Annexes techniques", { bold: true, size: 32, after: 160 }));
+    for (const annexe of content.annexes ?? []) {
+      body.push(paragraph(annexe.title ?? annexe.key ?? "Annexe", { bold: true, size: 26, after: 80 }));
+      if (annexe.source) body.push(paragraph(`Source VarGeo.AI : ${annexe.source}`, { size: 18, after: 80 }));
+      if (annexe.content !== undefined) body.push(contentParagraphs(annexe.content));
+      if (annexe.boreholes !== undefined) body.push(contentParagraphs(annexe.boreholes));
+    }
   }
 
   body.push(paragraph("Document genere par VarGeo.AI - validation ingenieur requise avant emission.", { size: 18, after: 0 }));
