@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { baseReportSections } from "@/lib/report";
 import { aiText,TECHNICAL_SYSTEM_PROMPT } from "@/lib/ai";
 import { readProjectGeodata } from "@/lib/geodata";
+import { synthesizeGeodata } from "@/lib/geodata-synthesis";
 
 export async function POST(req:Request){
   try{
@@ -17,7 +18,9 @@ export async function POST(req:Request){
     if(!project)return NextResponse.json({error:"Affaire introuvable"},{status:404});
     const analyses=await sql.query("SELECT module_code,title,outputs,standard_refs,status FROM analyses WHERE project_id=$1 ORDER BY created_at",[projectId]);
     const geodata=await readProjectGeodata(projectId).catch(()=>({boreholes:[]}));
-    const content:any=baseReportSections(project,analyses as any,geodata);
+    const synthesis=synthesizeGeodata(geodata);
+    const enrichedGeodata={...geodata,synthesis};
+    const content:any=baseReportSections(project,analyses as any,enrichedGeodata);
     const compactGeodata=(geodata.boreholes||[]).map((b:any)=>({
       name:b.name,depth_m:b.depth_m,
       layers:(b.layers||[]).map((l:any)=>({from:l.from,to:l.to,family:l.family,description:l.description,source:l.source})),
@@ -25,7 +28,7 @@ export async function POST(req:Request){
     }));
     const synthesis=await aiText([
       {role:"system",content:TECHNICAL_SYSTEM_PROMPT},
-      {role:"user",content:`Rédige une synthèse technique de 180 mots maximum. N'invente aucune donnée et distingue mesures et interprétations. Projet: ${JSON.stringify({code:project.code,title:project.title,mission:missionType,description:project.description})}. Données terrain centralisées: ${JSON.stringify(compactGeodata)}. Analyses disponibles: ${JSON.stringify(analyses)}.`}
+      {role:"user",content:`Rédige une synthèse technique de 180 mots maximum. N'invente aucune donnée et distingue mesures et interprétations. Projet: ${JSON.stringify({code:project.code,title:project.title,mission:missionType,description:project.description})}. Données terrain centralisées: ${JSON.stringify(compactGeodata)}. Synthèse par unités: ${JSON.stringify(synthesis)}. Analyses disponibles: ${JSON.stringify(analyses)}.`}
     ]).catch(()=>null);
     if(synthesis)content.ai_synthesis=synthesis;
     const title=`${missionType} — ${project.code} — ${project.title}`;
