@@ -9,8 +9,8 @@
   "scripts": {
     "start": "electron .",
     "build:icon": "node scripts/build-icon.mjs",
-    "dist:win": "npm run build:icon && electron-builder --win nsis x64",
-    "dist:win:portable": "npm run build:icon && electron-builder --win portable x64"
+    "dist:win": "npm run build:icon && electron-builder --win nsis --x64",
+    "dist:win:portable": "npm run build:icon && electron-builder --win portable --x64"
   },
   "devDependencies": {
     "electron": "35.7.5",
@@ -34,7 +34,9 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.png"
