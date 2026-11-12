@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Test={depth:number;em:number;pl:number;p0:number;plStar:number;ratio:number|null};
 type Layer={from:number;to:number;family:string;description:string};
@@ -17,11 +17,12 @@ function points(tests:Test[],key:"em"|"plStar"|"ratio",max:number,maxDepth:numbe
 
 type Project={id:string;code:string;title:string};
 
-export default function PressioProfileWorkbench({projects}:{projects:Project[]}){
-  const [pressio,setPressio]=useState(DEMO_PRESSIO);const [strat,setStrat]=useState(DEMO_STRAT);const [water,setWater]=useState("3.2");const [projectId,setProjectId]=useState("");const [boreholeName,setBoreholeName]=useState("");const [projectData,setProjectData]=useState<any>(null);
+export default function PressioProfileWorkbench({projects,initialProjectId=""}:{projects:Project[];initialProjectId?:string}){
+  const [pressio,setPressio]=useState(DEMO_PRESSIO);const [strat,setStrat]=useState(DEMO_STRAT);const [water,setWater]=useState("3.2");const [projectId,setProjectId]=useState(initialProjectId);const [boreholeName,setBoreholeName]=useState("");const [projectData,setProjectData]=useState<any>(null);
   const tests=useMemo(()=>parseTests(pressio),[pressio]);const layers=useMemo(()=>parseLayers(strat),[strat]);const maxDepth=Math.max(1,...tests.map(x=>x.depth),...layers.map(x=>x.to));
   const maxEm=Math.max(1,...tests.map(x=>x.em))*1.08,maxPl=Math.max(1,...tests.map(x=>x.plStar))*1.08,maxRatio=Math.max(1,...tests.map(x=>x.ratio||0))*1.08;
   const medEm=median(tests.map(x=>x.em)),medPl=median(tests.map(x=>x.plStar));const waterDepth=n(water);
+  useEffect(()=>{if(initialProjectId) void loadProject(initialProjectId);},[initialProjectId]);
   async function loadProject(id:string){setProjectId(id);setBoreholeName("");if(!id){setProjectData(null);return;}const res=await fetch(`/api/projects/${id}/geodata`,{cache:"no-store"});const data=await res.json().catch(()=>({}));if(res.ok){setProjectData(data);const first=data.boreholes?.[0];if(first)loadBorehole(first.name,data);} }
   function loadBorehole(name:string,data:any=projectData){setBoreholeName(name);const b=(data?.boreholes||[]).find((x:any)=>x.name===name);if(!b)return;setStrat((b.layers||[]).map((l:any)=>[l.from,l.to,l.family,l.description].join(";")).join("\n"));setPressio((b.pressio||[]).map((p:any)=>[p.depth,p.em??"",p.pl??"",p.p0??""].join(";")).join("\n"));const w=b.water?.[0];setWater(w?String(w.depth):"");}
   return <section className="card pressio-wrap">
