@@ -29,7 +29,7 @@ export default function Home(){
   return <main className="public-site">
     <header className="public-nav">
       <div className="brand"><div className="brand-mark"/><div><strong>VarGéo.AI</strong><small>Engineering Intelligence</small></div></div>
-      <div className="toolbar"><a className="button secondary" href="#devis">Demander un devis</a><Link className="button" href="/login">Connexion</Link></div>
+      <div className="toolbar"><Link className="button secondary" href="/windows">Windows</Link><a className="button secondary" href="#devis">Demander un devis</a><Link className="button" href="/login">Connexion</Link></div>
     </header>
 
     <section className="public-hero">
