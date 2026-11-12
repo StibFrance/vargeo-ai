@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, useMemo, useState } from "react";
+import { ChangeEvent, useEffect, useMemo, useState } from "react";
 
 type ViewMode = "simple" | "expert";
 type Layer = { borehole:string; from:number; to:number; family:string; description:string; em?:number; pl?:number; note?:string; };
@@ -15,9 +15,10 @@ function simpleLabel(layer:Layer){ const x=layer.family.toLowerCase(); if(x.incl
 
 type Project={id:string;code:string;title:string};
 
-export default function StratigraphyWorkbench({projects}:{projects:Project[]}){
-  const [raw,setRaw]=useState(DEMO); const [mode,setMode]=useState<ViewMode>("simple"); const [busy,setBusy]=useState(false); const [message,setMessage]=useState(""); const [section,setSection]=useState(true); const [projectId,setProjectId]=useState("");
+export default function StratigraphyWorkbench({projects,initialProjectId=""}:{projects:Project[];initialProjectId?:string}){
+  const [raw,setRaw]=useState(DEMO); const [mode,setMode]=useState<ViewMode>("simple"); const [busy,setBusy]=useState(false); const [message,setMessage]=useState(""); const [section,setSection]=useState(true); const [projectId,setProjectId]=useState(initialProjectId);
   const rows=useMemo(()=>parseRows(raw),[raw]); const boreholes=useMemo(()=>[...new Set(rows.map(r=>r.borehole))],[rows]); const maxDepth=useMemo(()=>Math.max(1,...rows.map(r=>r.to)),[rows]); const families=useMemo(()=>[...new Set(rows.map(r=>r.family))],[rows]);
+  useEffect(()=>{if(initialProjectId) void loadProject(initialProjectId);},[initialProjectId]);
   async function loadProject(id:string){ setProjectId(id); if(!id)return; setBusy(true);setMessage(""); const res=await fetch(`/api/projects/${id}/geodata`,{cache:"no-store"}); const data=await res.json().catch(()=>({})); setBusy(false); if(!res.ok){setMessage(data.error||"Lecture impossible");return;} const lines:string[]=[]; for(const b of data.boreholes||[]){ for(const l of b.layers||[]){ lines.push([b.name,l.from,l.to,l.family,l.description,"","",l.note||""].join(";")); } } if(lines.length){setRaw(lines.join("\n"));setMessage("Données chargées depuis l’affaire.");} else setMessage("Aucune stratigraphie enregistrée dans cette affaire."); }
   async function importFile(e:ChangeEvent<HTMLInputElement>){ const file=e.target.files?.[0]; if(!file)return; setBusy(true);setMessage(""); const form=new FormData();form.set("file",file); const res=await fetch("/api/stratigraphy/import",{method:"POST",body:form}); const data=await res.json().catch(()=>({})); setBusy(false); if(!res.ok){setMessage(data.error||"Import impossible");return;} if(Array.isArray(data.layers)&&data.layers.length){setRaw(serializeRows(data.layers)); setMessage(String(data.layers.length)+" horizon(s) importé(s). "+(Array.isArray(data.warnings)?data.warnings.join(" "):""));}else setMessage((data.warnings||[]).join(" ")||"Aucun horizon exploitable détecté."); e.target.value=""; }
   return <section className="card strat-wrap">
