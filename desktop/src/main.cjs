@@ -74,7 +74,7 @@ function createMenu() {
 }
 
 function configureSession() {
-  const ses = session.defaultSession;
+  const ses = session.fromPartition("persist:vargeo");
   ses.setPermissionRequestHandler((_webContents, permission, callback) => {
     callback(["clipboard-read", "clipboard-sanitized-write", "notifications"].includes(permission));
   });
@@ -110,7 +110,10 @@ async function createWindow() {
   mainWindow.once("ready-to-show", () => mainWindow.show());
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    if (isTrustedUrl(url)) return { action: "allow" };
+    if (isTrustedUrl(url)) {
+      mainWindow?.loadURL(url);
+      return { action: "deny" };
+    }
     if (/^https?:/i.test(url)) shell.openExternal(url);
     return { action: "deny" };
   });
