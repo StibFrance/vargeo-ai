@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import ValidateAnalysisButton from "@/components/validate-analysis-button";
 import ProjectMembersPanel from "@/components/project-members-panel";
 import KnowledgeUpload from "@/components/knowledge-upload";
+import ProjectGeodataPanel from "@/components/project-geodata-panel";
 
 export default async function ProjectDetail({params}:{params:Promise<{id:string}>}){
   const {id}=await params;
@@ -83,6 +84,8 @@ export default async function ProjectDetail({params}:{params:Promise<{id:string}
         {!reports.length&&<p className="muted">Aucun rapport.</p>}
       </section>
     </div>
+
+    {internal&&<ProjectGeodataPanel projectId={id}/>}
 
     {internal&&<div className="split" style={{marginTop:18}}>
       <KnowledgeUpload projectId={id}/>
