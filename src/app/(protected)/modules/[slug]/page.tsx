@@ -26,8 +26,8 @@ export default async function ModulePage({params}:{params:Promise<{slug:string}>
       <div className="toolbar">{module.standards.map(s=><span className="badge" key={s}>{s}</span>)}</div>
     </div></div>
 
-    {slug==="strat" && <StratigraphyWorkbench/>}
-    {slug==="pressio" && <PressioProfileWorkbench/>}
+    {slug==="strat" && <StratigraphyWorkbench projects={projects as {id:string;code:string;title:string}[]}/>}
+    {slug==="pressio" && <PressioProfileWorkbench projects={projects as {id:string;code:string;title:string}[]}/>}
     <ModuleWorkbench module={module} projects={projects as {id:string;code:string;title:string}[]}/>
   </div>;
 }
