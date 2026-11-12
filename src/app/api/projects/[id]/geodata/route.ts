@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireUser, projectScope } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { readProjectGeodata, replaceProjectGeodata, type ProjectGeoData } from "@/lib/geodata";
+import { synthesizeGeodata } from "@/lib/geodata-synthesis";
 
 async function authorize(projectId:string,user:Awaited<ReturnType<typeof requireUser>>,write=false){
   if(write && user.role==="client") return false;
@@ -15,7 +16,8 @@ export async function GET(_req:Request,{params}:{params:Promise<{id:string}>}){
     const user=await requireUser();
     const {id}=await params;
     if(!(await authorize(id,user,false))) return NextResponse.json({error:"Affaire non autorisée"},{status:403});
-    return NextResponse.json(await readProjectGeodata(id));
+    const data=await readProjectGeodata(id);
+    return NextResponse.json({...data,synthesis:synthesizeGeodata(data)});
   }catch(error){
     console.error(error);
     return NextResponse.json({error:error instanceof Error?error.message:"Lecture impossible"},{status:500});
@@ -34,7 +36,7 @@ export async function PUT(req:Request,{params}:{params:Promise<{id:string}>}){
       "INSERT INTO audit_log(organization_id,user_id,action,entity_type,entity_id,details) VALUES($1,$2,'geodata_replace','project',$3,$4::jsonb)",
       [user.organization_id,user.id,id,JSON.stringify({boreholes:saved.boreholes.length})]
     );
-    return NextResponse.json(saved);
+    return NextResponse.json({...saved,synthesis:synthesizeGeodata(saved)});
   }catch(error){
     console.error(error);
     return NextResponse.json({error:error instanceof Error?error.message:"Enregistrement impossible"},{status:500});
