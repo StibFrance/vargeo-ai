@@ -2,6 +2,7 @@ import { notFound,redirect } from "next/navigation";
 import { getModuleBySlug } from "@/lib/modules";
 import ModuleWorkbench from "@/components/module-workbench";
 import StratigraphyWorkbench from "@/components/stratigraphy-workbench";
+import PressioProfileWorkbench from "@/components/pressio-profile-workbench";
 import { requireUser,projectScope } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -26,6 +27,7 @@ export default async function ModulePage({params}:{params:Promise<{slug:string}>
     </div></div>
 
     {slug==="strat" && <StratigraphyWorkbench/>}
+    {slug==="pressio" && <PressioProfileWorkbench/>}
     <ModuleWorkbench module={module} projects={projects as {id:string;code:string;title:string}[]}/>
   </div>;
 }
