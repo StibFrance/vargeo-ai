@@ -1,8 +1,8 @@
-import { Pool } from "pg";
+import { Pool, PoolClient } from "pg";
 
 type DbRow = Record<string, any>;
 
-type AppDb = {
+export type AppDb = {
   query<T extends DbRow = DbRow>(text: string, params?: any[]): Promise<T[]>;
 };
 
@@ -14,10 +14,9 @@ function sslFor(url: string) {
   return { rejectUnauthorized: false };
 }
 
-export function db(): AppDb {
+function getPool() {
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) throw new Error("DATABASE_URL n'est pas configuree.");
-
   if (!pool) {
     pool = new Pool({
       connectionString,
@@ -27,15 +26,34 @@ export function db(): AppDb {
       connectionTimeoutMillis: 10000,
     });
   }
+  return pool;
+}
 
+export function db(): AppDb {
+  const current=getPool();
   if (!wrapped) {
     wrapped = {
       async query<T extends DbRow = DbRow>(text: string, params: any[] = []) {
-        const result = await pool!.query(text, params);
+        const result = await current.query(text, params);
         return result.rows as T[];
       },
     };
   }
-
   return wrapped;
+}
+
+export async function withDbTransaction<T>(fn:(tx:AppDb)=>Promise<T>):Promise<T>{
+  const client:PoolClient=await getPool().connect();
+  const tx:AppDb={query:async <R extends DbRow = DbRow>(text:string,params:any[]=[])=>(await client.query(text,params)).rows as R[]};
+  try{
+    await client.query("BEGIN");
+    const result=await fn(tx);
+    await client.query("COMMIT");
+    return result;
+  }catch(error){
+    await client.query("ROLLBACK");
+    throw error;
+  }finally{
+    client.release();
+  }
 }
