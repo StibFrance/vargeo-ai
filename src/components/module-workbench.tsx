@@ -4,6 +4,8 @@ import type { ModuleDefinition } from "@/lib/modules";
 
 type Project={id:string;code:string;title:string};
 type GeoBorehole={name:string;pressio:Array<{depth:number;em?:number|null;pl?:number|null;p0?:number|null}>};
+type GeoUnit={key:string;family:string;test_count:number;borehole_count:number;Em_MPa:{median:number|null};pl_star_MPa:{median:number|null};relative_level:string;engineering_review_candidate:boolean;caution:string};
+type GeoData={boreholes:GeoBorehole[];synthesis?:{units:GeoUnit[];methodology:string}};
 
 function median(values:number[]){
   if(!values.length)return 0;
@@ -16,7 +18,8 @@ export default function ModuleWorkbench({module,projects,initialProjectId=""}:{m
   const [error,setError]=useState("");
   const [busy,setBusy]=useState(false);
   const [selectedProject,setSelectedProject]=useState(initialProjectId);
-  const [geo,setGeo]=useState<{boreholes:GeoBorehole[]}|null>(null);
+  const [geo,setGeo]=useState<GeoData|null>(null);
+  const [selectedUnit,setSelectedUnit]=useState("");
   const [selectedBorehole,setSelectedBorehole]=useState("");
   const [autoDefaults,setAutoDefaults]=useState<Record<string,string|number>>({});
   const [revision,setRevision]=useState(0);
@@ -26,14 +29,24 @@ export default function ModuleWorkbench({module,projects,initialProjectId=""}:{m
 
   async function projectChanged(id:string){
     setSelectedProject(id);
-    if(module.slug!=="fonda"||!id){setGeo(null);setSelectedBorehole("");setAutoContext("");return;}
+    if(module.slug!=="fonda"||!id){setGeo(null);setSelectedBorehole("");setSelectedUnit("");setAutoContext("");return;}
     const res=await fetch(`/api/projects/${id}/geodata`,{cache:"no-store"});
     const data=await res.json().catch(()=>({}));
     if(!res.ok){setAutoContext(data.error||"Données terrain indisponibles.");return;}
     setGeo(data);
+    setSelectedUnit("");
     const first=data.boreholes?.[0];
     if(first) applyBorehole(first.name,data);
     else setAutoContext("Aucun sondage centralisé dans cette affaire.");
+  }
+
+  function applyUnit(key:string){
+    setSelectedUnit(key);
+    const u=geo?.synthesis?.units?.find(x=>x.key===key);
+    if(!u)return;
+    const em=u.Em_MPa?.median;
+    if(em!==null&&em!==undefined){setAutoDefaults(d=>({...d,Em:Number(em.toFixed(2))}));setRevision(x=>x+1);}
+    setAutoContext(`Unité ${u.family} : ${u.test_count} essai(s) sur ${u.borehole_count} sondage(s), Em médian ${em??"—"} MPa, pl* médian ${u.pl_star_MPa?.median??"—"} MPa, niveau relatif ${u.relative_level}. ${u.caution}`);
   }
 
   function applyBorehole(name:string,data:any=geo){
@@ -67,7 +80,7 @@ export default function ModuleWorkbench({module,projects,initialProjectId=""}:{m
   return <div className="split">
     <form className="card form" onSubmit={submit}>
       <div className="field"><label>Affaire liée</label><select name="projectId" value={selectedProject} onChange={e=>projectChanged(e.target.value)}><option value="">Calcul non rattaché</option>{projects.map(p=><option key={p.id} value={p.id}>{p.code} — {p.title}</option>)}</select></div>
-      {module.slug==="fonda"&&geo&&<div className="field"><label>Sondage source</label><select value={selectedBorehole} onChange={e=>applyBorehole(e.target.value)}><option value="">Choisir…</option>{geo.boreholes.map(b=><option key={b.name} value={b.name}>{b.name}</option>)}</select></div>}
+      {module.slug==="fonda"&&geo&&<><div className="field"><label>Sondage source</label><select value={selectedBorehole} onChange={e=>applyBorehole(e.target.value)}><option value="">Choisir…</option>{geo.boreholes.map(b=><option key={b.name} value={b.name}>{b.name}</option>)}</select></div>{geo.synthesis?.units?.length?<div className="field"><label>Unité géotechnique source</label><select value={selectedUnit} onChange={e=>applyUnit(e.target.value)}><option value="">Choisir une unité…</option>{geo.synthesis.units.map(u=><option key={u.key} value={u.key}>{u.family} — Em méd. {u.Em_MPa?.median??"—"} MPa · pl* méd. {u.pl_star_MPa?.median??"—"} MPa</option>)}</select></div>:null}</>}
       {autoContext&&<div className="notice">{autoContext}</div>}
       {module.fields.map(f=><div className="field" key={f.name}><label>{f.label}{f.unit&&<span className="unit"> · {f.unit}</span>}</label>{f.type==="textarea"?<textarea name={f.name} defaultValue={f.defaultValue} placeholder={f.placeholder} required/>:<input key={f.name+"-"+revision} name={f.name} type={f.type} defaultValue={autoDefaults[f.name]??f.defaultValue} placeholder={f.placeholder} step={f.type==="number"?"any":undefined} required/>}</div>)}
       <div className="notice">{module.caution}</div>
