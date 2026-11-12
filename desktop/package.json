@@ -1,0 +1,53 @@
+{
+  "name": "vargeo-ai-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Client Windows officiel VarGéo.AI",
+  "main": "src/main.cjs",
+  "author": "Var Géotechnique / STIB France",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "build:icon": "node scripts/build-icon.mjs",
+    "dist:win": "npm run build:icon && electron-builder --win nsis x64",
+    "dist:win:portable": "npm run build:icon && electron-builder --win portable x64"
+  },
+  "devDependencies": {
+    "electron": "35.7.5",
+    "electron-builder": "26.0.12",
+    "sharp": "0.34.4"
+  },
+  "build": {
+    "appId": "ai.vargeo.desktop",
+    "productName": "VarGéo.AI",
+    "artifactName": "VarGeo-AI-Setup-${version}.${ext}",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "VarGéo.AI",
+      "uninstallDisplayName": "VarGéo.AI",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}
