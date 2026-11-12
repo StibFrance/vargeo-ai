@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import type { ModuleDefinition } from "@/lib/modules";
 
 type Project={id:string;code:string;title:string};
@@ -11,16 +11,18 @@ function median(values:number[]){
   return a.length%2?a[m]:(a[m-1]+a[m])/2;
 }
 
-export default function ModuleWorkbench({module,projects}:{module:ModuleDefinition;projects:Project[]}){
+export default function ModuleWorkbench({module,projects,initialProjectId=""}:{module:ModuleDefinition;projects:Project[];initialProjectId?:string}){
   const [result,setResult]=useState<unknown>(null);
   const [error,setError]=useState("");
   const [busy,setBusy]=useState(false);
-  const [selectedProject,setSelectedProject]=useState("");
+  const [selectedProject,setSelectedProject]=useState(initialProjectId);
   const [geo,setGeo]=useState<{boreholes:GeoBorehole[]}|null>(null);
   const [selectedBorehole,setSelectedBorehole]=useState("");
   const [autoDefaults,setAutoDefaults]=useState<Record<string,string|number>>({});
   const [revision,setRevision]=useState(0);
   const [autoContext,setAutoContext]=useState("");
+
+  useEffect(()=>{ if(initialProjectId) void projectChanged(initialProjectId); },[initialProjectId]);
 
   async function projectChanged(id:string){
     setSelectedProject(id);
