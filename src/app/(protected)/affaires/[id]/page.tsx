@@ -53,7 +53,7 @@ export default async function ProjectDetail({params}:{params:Promise<{id:string}
         <h1 className="title">{p.title}</h1>
         <p className="subtitle">{[p.address,p.postal_code,p.city].filter(Boolean).join(" ")||"Adresse non renseignée"} · Client : {p.client_name||"non renseigné"}</p>
       </div>
-      {internal&&<div className="toolbar"><Link className="button" href="/modules">Nouveau calcul</Link><Link className="button secondary" href="/reports">Créer un rapport</Link><Link className="button secondary" href="/assistant">Interroger VarGéo.AI</Link></div>}
+      {internal&&<div className="toolbar"><Link className="button" href={`/modules/strat?projectId=${id}`}>M1 STRAT</Link><Link className="button secondary" href={`/modules/pressio?projectId=${id}`}>M2 PRESSIO</Link><Link className="button secondary" href={`/modules/fonda?projectId=${id}`}>M3 FONDA</Link><Link className="button secondary" href="/reports">Créer un rapport</Link><Link className="button secondary" href="/assistant">Interroger VarGéo.AI</Link></div>}
     </div>
 
     <div className="grid grid-3" style={{marginBottom:18}}>
