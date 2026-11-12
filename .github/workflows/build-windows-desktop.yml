@@ -4,12 +4,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    tags: ["v*"]
     paths:
       - "desktop/**"
       - ".github/workflows/build-windows-desktop.yml"
-  release:
-    types: [published]
 
 permissions:
   contents: write
@@ -17,6 +14,7 @@ permissions:
 jobs:
   build-windows:
     runs-on: windows-latest
+    timeout-minutes: 30
     defaults:
       run:
         working-directory: desktop
@@ -33,6 +31,11 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Check desktop JavaScript
+        run: |
+          node --check src/main.cjs
+          node --check src/preload.cjs
+
       - name: Build Windows installer
         run: npm run dist:win
         env:
@@ -46,9 +49,14 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Attach installer to GitHub Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: desktop/dist/*.exe
-          generate_release_notes: true
+      - name: Publish rolling Windows release
+        shell: pwsh
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view desktop-latest *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create desktop-latest --title "VarGéo.AI Windows" --notes "Installateur Windows x64 officiel de VarGéo.AI. Cette release est mise à jour automatiquement après validation du build."
+          }
+          gh release upload desktop-latest desktop/dist/*.exe --clobber
