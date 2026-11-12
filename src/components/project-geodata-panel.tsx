@@ -6,7 +6,7 @@ type Layer={from:number;to:number;family:string;description:string;source?:"meas
 type Pressio={depth:number;em?:number|null;pl?:number|null;p0?:number|null;pf?:number|null;source?:string|null};
 type Water={depth:number;observed_at?:string|null;observation_type?:string|null;note?:string|null};
 type Borehole={id?:string;name:string;x?:number|null;y?:number|null;z?:number|null;depth_m?:number|null;method?:string|null;layers:Layer[];pressio:Pressio[];water:Water[]};
-type GeoData={boreholes:Borehole[]};
+type GeoData={boreholes:Borehole[];synthesis?:{unmatched_tests?:number;units?:Array<{key:string;family:string;test_count:number;borehole_count:number;engineering_review_candidate:boolean}>;methodology?:string}};
 
 function rowsToLayers(raw:string):Layer[]{
   return raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).map(line=>{
@@ -30,6 +30,16 @@ export default function ProjectGeodataPanel({projectId}:{projectId:string}){
   const [message,setMessage]=useState("");
   const current=data.boreholes[selected];
   const totals=useMemo(()=>({boreholes:data.boreholes.length,layers:data.boreholes.reduce((s,b)=>s+b.layers.length,0),pressio:data.boreholes.reduce((s,b)=>s+b.pressio.length,0)}),[data]);
+  const qa=useMemo(()=>{
+    const warnings:string[]=[];
+    for(const b of data.boreholes){
+      if(!b.layers.length)warnings.push(`${b.name} : aucune stratigraphie enregistrée.`);
+      if(!b.pressio.length)warnings.push(`${b.name} : aucun essai pressiométrique enregistré.`);
+      if((b.layers||[]).some((l,i,a)=>i>0&&l.from<a[i-1].to))warnings.push(`${b.name} : chevauchement de couches à vérifier.`);
+    }
+    if((data.synthesis?.unmatched_tests||0)>0)warnings.push(`${data.synthesis?.unmatched_tests} essai(s) pressiométrique(s) non rattaché(s) à un horizon.`);
+    return {warnings,status:warnings.length?"À contrôler":"Cohérent pour exploitation"};
+  },[data]);
 
   async function load(){
     const res=await fetch(`/api/projects/${projectId}/geodata`,{cache:"no-store"});
@@ -88,7 +98,7 @@ export default function ProjectGeodataPanel({projectId}:{projectId:string}){
 
   return <section className="card project-geodata">
     <div className="geo-head"><div><div className="eyebrow">Données terrain centralisées</div><h3>Sondages & essais</h3><p className="muted">Une seule saisie pour M1 STRAT, M2 PRESSIO, M3 FONDA et les rapports.</p></div><div className="toolbar"><label className="button secondary geo-upload">Importer un log<input type="file" accept=".pdf,.docx,.csv,.txt,.md,.json" onChange={importFile}/></label><button className="button secondary" type="button" onClick={addBorehole}>Ajouter un sondage</button><button className="button" type="button" onClick={save} disabled={busy}>{busy?"Enregistrement…":"Enregistrer dans l'affaire"}</button></div></div>
-    <div className="geo-kpis"><span><strong>{totals.boreholes}</strong> sondage(s)</span><span><strong>{totals.layers}</strong> horizon(s)</span><span><strong>{totals.pressio}</strong> essai(s) pressiométrique(s)</span></div>
+    <div className="geo-kpis"><span><strong>{totals.boreholes}</strong> sondage(s)</span><span><strong>{totals.layers}</strong> horizon(s)</span><span><strong>{totals.pressio}</strong> essai(s) pressiométrique(s)</span><span><strong>{qa.status}</strong> · contrôle de complétude</span></div>{qa.warnings.length>0&&<div className="qa-box"><strong>Points à contrôler avant validation</strong>{qa.warnings.map((w,i)=><div key={i}>• {w}</div>)}</div>}{!qa.warnings.length&&totals.boreholes>0&&<div className="success">Contrôle de complétude : aucune incohérence simple détectée. Cela ne remplace pas la revue géotechnique de l’ingénieur.</div>}
     {message&&<div className="notice">{message}</div>}
     {data.boreholes.length?<div className="geo-layout">
       <aside className="geo-list">{data.boreholes.map((b,i)=><button type="button" className={i===selected?"active":""} key={b.id||b.name+"-"+i} onClick={()=>setSelected(i)}><strong>{b.name}</strong><small>{b.layers.length} couches · {b.pressio.length} essais</small></button>)}</aside>
@@ -99,6 +109,6 @@ export default function ProjectGeodataPanel({projectId}:{projectId:string}){
         <div className="toolbar"><button className="button danger" type="button" onClick={removeCurrent}>Supprimer ce sondage</button></div>
       </div>}
     </div>:<div className="notice">Aucun sondage enregistré. Importez un log ou créez le premier sondage.</div>}
-    <style>{".project-geodata{margin-top:18px}.geo-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.geo-head h3{margin:5px 0}.geo-upload{position:relative;overflow:hidden}.geo-upload input{position:absolute;inset:0;opacity:0}.geo-kpis{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.geo-kpis span{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#081522;font-size:12px}.geo-layout{display:grid;grid-template-columns:190px 1fr;gap:14px}.geo-list{display:grid;align-content:start;gap:7px}.geo-list button{background:#081522;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px;text-align:left;cursor:pointer}.geo-list button.active{border-color:var(--blue);box-shadow:0 0 0 2px #35a9ff22}.geo-list small{display:block;color:var(--muted);margin-top:4px}.geo-editor{display:grid;gap:14px}.geo-editor textarea{min-height:230px}@media(max-width:900px){.geo-layout{grid-template-columns:1fr}.geo-list{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}.geo-head{flex-direction:column}}"}</style>
+    <style>{".project-geodata{margin-top:18px}.geo-head{display:flex;justify-content:space-between;gap:18px;align-items:flex-start}.geo-head h3{margin:5px 0}.geo-upload{position:relative;overflow:hidden}.geo-upload input{position:absolute;inset:0;opacity:0}.geo-kpis{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}.qa-box{margin:10px 0;padding:12px;border:1px solid #8a6b2c;border-radius:10px;background:#251d0b;color:#f0dfb0;font-size:12px;line-height:1.55}.qa-box strong{display:block;margin-bottom:5px}.geo-kpis span{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#081522;font-size:12px}.geo-layout{display:grid;grid-template-columns:190px 1fr;gap:14px}.geo-list{display:grid;align-content:start;gap:7px}.geo-list button{background:#081522;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px;text-align:left;cursor:pointer}.geo-list button.active{border-color:var(--blue);box-shadow:0 0 0 2px #35a9ff22}.geo-list small{display:block;color:var(--muted);margin-top:4px}.geo-editor{display:grid;gap:14px}.geo-editor textarea{min-height:230px}@media(max-width:900px){.geo-layout{grid-template-columns:1fr}.geo-list{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}.geo-head{flex-direction:column}}"}</style>
   </section>;
 }
